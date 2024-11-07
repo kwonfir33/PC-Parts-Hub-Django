@@ -1,6 +1,16 @@
 from django.contrib import admin
-from .models import TodoItem
-# Register your models here.
+from .models import *
 
-admin.site.register(TodoItem)
+admin.site.register(Customer)
+admin.site.register(Product)
+admin.site.register(Order)
+admin.site.register(OrderItem)
+admin.site.register(ShippingAddress)
+
+
+# super acc
+# Username: alec
+# Email Address: alec@gmail.com
+# Password: alectest
+
 

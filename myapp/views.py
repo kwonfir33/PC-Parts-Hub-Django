@@ -1,4 +1,6 @@
 from django.shortcuts import render, HttpResponse
+from .models import *
+# handles request/response logic view > model > template
 
 def home(request):
     context = {}
@@ -25,13 +27,34 @@ def feedback(request):
 
 
 def products(request):
-    context = {}
+    products = Product.objects.all()
+    context = {'products':products}
     return render(request, 'products.html', context)
 
 def cart(request):
-    context = {}
+    if request.user.is_authenticated:
+        #user logged in (saved items rendered)
+        customer = request.user.customer
+        order, created = Order.objects.get_or_create(customer=customer, complete=False)
+        items = order.orderitem_set.all()
+    else:
+        #user not logged in(set all values to 0) 
+        items = []
+        order = {'get_cart_total':0, 'get_cart_items':0}
+
+    context = {'items': items, 'order': order}
     return render(request, 'cart.html', context)
 
 def checkout(request):
-    context = {}
+    if request.user.is_authenticated:
+        #user logged in (saved items rendered)
+        customer = request.user.customer
+        order, created = Order.objects.get_or_create(customer=customer, complete=False)
+        items = order.orderitem_set.all()
+    else:
+        #user not logged in(set all values to 0) 
+        items = []
+        order = {'get_cart_total':0, 'get_cart_items':0}
+
+    context = {'items': items, 'order': order}
     return render(request, 'checkout.html', context)
