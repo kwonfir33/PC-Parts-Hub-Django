@@ -7,7 +7,6 @@ def home(request):
     return render(request, 'home.html', context)
 
 
-
 def login(request):
     context = {}
     return render(request, 'login.html', context)
@@ -27,7 +26,8 @@ def feedback(request):
 
 
 def products(request):
-    products = Product.objects.all()
+    # fetch every record from Product Model DB then send to template
+    products = Product.objects.all() 
     context = {'products':products}
     return render(request, 'products.html', context)
 
@@ -38,7 +38,7 @@ def cart(request):
         order, created = Order.objects.get_or_create(customer=customer, complete=False)
         items = order.orderitem_set.all()
     else:
-        #user not logged in(set all values to 0) 
+        #user in guest mode (empties the cart)
         items = []
         order = {'get_cart_total':0, 'get_cart_items':0}
 
@@ -52,7 +52,7 @@ def checkout(request):
         order, created = Order.objects.get_or_create(customer=customer, complete=False)
         items = order.orderitem_set.all()
     else:
-        #user not logged in(set all values to 0) 
+        #user not logged in / guest(set all values to 0) 
         items = []
         order = {'get_cart_total':0, 'get_cart_items':0}
 

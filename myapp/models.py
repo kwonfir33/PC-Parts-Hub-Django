@@ -25,8 +25,10 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
-    
+    # "property" used to access like an attribute
+    @property
     def imageURL(self):
+        # try catch to see if prd has an img, if no return empty string
         try:
             url = self.image.url
         except:
@@ -42,12 +44,14 @@ class Order(models.Model):
     def __str__(self):
         return str(self.id)
     
+    #Calculate Total Price for Items
     @property
     def get_cart_total(self):
         orderitems = self.orderitem_set.all()
         total = sum([item.get_total for item in orderitems])
         return total
     
+     #Calculate Total Quantity for Items
     @property
     def get_cart_items(self):
         orderitems = self.orderitem_set.all()
@@ -60,6 +64,7 @@ class OrderItem(models.Model):
     quantity = models.IntegerField(default = 0, null=True, blank=True)
     date_added = models.DateTimeField(auto_now_add=True)
 
+    # Calculate total price of items
     @property
     def get_total(self):
         total = self.product.price * self.quantity
