@@ -12,5 +12,3 @@ admin.site.register(ShippingAddress)
 # Username: alec
 # Email Address: alec@gmail.com
 # Password: alectest
-
-
