@@ -1,150 +1,102 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login as auth_login
-from django.contrib.auth.models import User
-from django.contrib import messages
-from .models import Customer, Order, OrderItem, Product
+from django.shortcuts import render
 from django.http import JsonResponse
+from .models import *
 import json
-from django.contrib.auth import logout
-from .models import Profile
+# handles request/response logic view > model > template
 
-# Home view
 def home(request):
     context = {}
     return render(request, 'home.html', context)
 
-# Login view
+
+
 def login(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        
-        # Authenticate user
-        user = authenticate(request, username=username, password=password)
+    context = {}
+    return render(request, 'login.html', context)
 
-        if user is not None:
-            auth_login(request, user)
-            return redirect('home')  # Redirect to home after successful login
-        else:
-            messages.error(request, "Invalid username or password")
-            return redirect('login')  # Stay on login page with error message
-    
-    return render(request, 'login.html')
-
-# Registration view
-def register_view(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        email = request.POST['email']
-        password = request.POST['password']
-        contact_no = request.POST['contact_no']
-        
-        if User.objects.filter(username=username).exists():
-            messages.error(request, 'Username already exists.')
-            return redirect('register')
-        
-        if User.objects.filter(email=email).exists():
-            messages.error(request, 'Email already exists.')
-            return redirect('register')
-        
-        # Create the user
-        user = User.objects.create_user(username=username, email=email, password=password)
-        
-        # Create the user profile and save additional info
-        profile = Profile(user=user, contact_no=contact_no)
-        profile.save()
-        
-        login(request, user)
-        return redirect('home')  # Redirect to the homepage after successful registration
-    
-    return render(request, 'login.html')
-
-def logout_user(request):
-    logout(request)  # Logs out the current user
-    return redirect('home')  # Redirects to the home page after logging out
-
-# About us view
 def aboutus(request):
     context = {}
     return render(request, 'aboutus.html', context)
 
-# My orders view
 def myorder(request):
     context = {}
     return render(request, 'myorder.html', context)
 
-# Feedback view
 def feedback(request):
     context = {}
     return render(request, 'feedback.html', context)
 
-# Products view (this page lists products and cart items)
+
+
 def products(request):
-    if request.user.is_authenticated:
-        customer = request.user.customer
-        order, created = Order.objects.get_or_create(customer=customer, complete=False)
-        items = order.orderitem_set.all()
-        cartItems = order.get_cart_items
-    else:
-        items = []
-        order = {'get_cart_total': 0, 'get_cart_items': 0}
-        cartItems = order['get_cart_items']
 
-    products = Product.objects.all()
-    context = {'products': products, 'cartItems': cartItems}
-    return render(request, 'products.html', context)
+	if request.user.is_authenticated:
+		customer = request.user.customer
+		order, created = Order.objects.get_or_create(customer=customer, complete=False)
+		items = order.orderitem_set.all()
+		cartItems = order.get_cart_items
+	else:
+		#Create empty cart for now for non-logged in user
+		items = []
+		order = {'get_cart_total':0, 'get_cart_items':0}
+		cartItems = order['get_cart_items']
 
-# Cart view (this page shows the user's cart)
+	products = Product.objects.all()
+	context = {'products':products, 'cartItems':cartItems}
+	return render(request, 'products.html', context)
+
 def cart(request):
-    if request.user.is_authenticated:
-        customer = request.user.customer
-        order, created = Order.objects.get_or_create(customer=customer, complete=False)
-        items = order.orderitem_set.all()
-        cartItems = order.get_cart_items
-    else:
-        items = []
-        order = {'get_cart_total': 0, 'get_cart_items': 0}
-        cartItems = order.get_cart_items
 
-    context = {'items': items, 'order': order, 'cartItems': cartItems}
-    return render(request, 'cart.html', context)
+	if request.user.is_authenticated:
+		customer = request.user.customer
+		order, created = Order.objects.get_or_create(customer=customer, complete=False)
+		items = order.orderitem_set.all()
+		cartItems = order.get_cart_items
+	else:
+		#Create empty cart for now for non-logged in user
+		items = []
+		order = {'get_cart_total':0, 'get_cart_items':0}
+		cartItems = order['get_cart_items']
 
-# Checkout view (this page is where users review and confirm their orders)
+	context = {'items':items, 'order':order, 'cartItems':cartItems}
+	return render(request, 'cart.html', context)
+
 def checkout(request):
-    if request.user.is_authenticated:
-        customer = request.user.customer
-        order, created = Order.objects.get_or_create(customer=customer, complete=False)
-        items = order.orderitem_set.all()
-        cartItems = order.get_cart_items
-    else:
-        items = []
-        order = {'get_cart_total': 0, 'get_cart_items': 0}
-        cartItems = order['get_cart_items']
+	if request.user.is_authenticated:
+		customer = request.user.customer
+		order, created = Order.objects.get_or_create(customer=customer, complete=False)
+		items = order.orderitem_set.all()
+		cartItems = order.get_cart_items
+	else:
+		#Create empty cart for now for non-logged in user
+		items = []
+		order = {'get_cart_total':0, 'get_cart_items':0}
+		cartItems = order['get_cart_items']
 
-    context = {'items': items, 'order': order, 'cartItems': cartItems}
-    return render(request, 'checkout.html', context)
+	context = {'items':items, 'order':order, 'cartItems':cartItems}
+	return render(request, 'checkout.html', context)
 
-# Update cart items (this will handle add/remove items from the cart)
 def updateItem(request):
-    data = json.loads(request.body)
-    productId = data['productId']
-    action = data['action']
-    
-    customer = request.user.customer
-    product = Product.objects.get(id=productId)
-    order, created = Order.objects.get_or_create(customer=customer, complete=False)
+	data = json.loads(request.body)
+	productId = data['productId']
+	action = data['action']
+	print('Action:', action)
+	print('Product:', productId)
 
-    orderItem, created = OrderItem.objects.get_or_create(order=order, product=product)
+	customer = request.user.customer
+	product = Product.objects.get(id=productId)
+	order, created = Order.objects.get_or_create(customer=customer, complete=False)
 
-    if action == 'add':
-        orderItem.quantity += 1
-    elif action == 'remove':
-        orderItem.quantity -= 1
-    
-    orderItem.save()
+	orderItem, created = OrderItem.objects.get_or_create(order=order, product=product)
 
-    if orderItem.quantity <= 0:
-        orderItem.delete()
+	if action == 'add':
+		orderItem.quantity = (orderItem.quantity + 1)
+	elif action == 'remove':
+		orderItem.quantity = (orderItem.quantity - 1)
 
-    return JsonResponse('Item was added', safe=False)
+	orderItem.save()
 
+	if orderItem.quantity <= 0:
+		orderItem.delete()
+
+	return JsonResponse('Item was added', safe=False)
