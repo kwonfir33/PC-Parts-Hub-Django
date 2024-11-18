@@ -1,14 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-# class User(models.Model):
-#     name = models.CharField(max_length=255)
-#     email = models.CharField(max_length=255)
-#     password = models.CharField(max_length=255)
-#     contact_no = models.IntegerField()
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    contact_no = models.CharField(max_length=15, blank=True)
 
-#     def __str__(self):
-#         return self.name
+    def __str__(self):
+        return f'{self.user.username} Profile'
 
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
