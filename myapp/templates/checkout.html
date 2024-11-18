@@ -54,12 +54,12 @@
 				<div class="cart-row">
 					<div style="flex:2"><img class="row-image" src="{{item.product.image.url}}"></div><!--Item Image-->
 					<div style="flex:2"><p>{{item.product.name}}</p></div><!--Item Name-->
-					<div style="flex:1"><p>${{item.product.price|floatformat:2}}</p></div><!--Item Price-->
+					<div style="flex:1"><p>₱{{item.product.price|floatformat:2}}</p></div><!--Item Price-->
 					<div style="flex:1"><p>x{{item.quantity}}</p></div><!--Item Quantity-->
 				</div>
 				{% endfor %}
 				<h5>Items:   {{order.get_cart_items}}</h5><!--Order Qty Total-->
-				<h5>Total:   ${{order.get_cart_total|floatformat:2}}</h5><!--Order Price Total-->
+				<h5>Total:   ₱{{order.get_cart_total|floatformat:2}}</h5><!--Order Price Total-->
 			</div>
 		</div>
 	</div>
