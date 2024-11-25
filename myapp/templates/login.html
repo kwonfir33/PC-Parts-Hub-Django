@@ -1,4 +1,4 @@
-{% load static %} 
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,8 +40,8 @@
                 <span>or use your email & password</span>
                 <input type="text" name="username" placeholder="Username" required>
                 <input type="password" name="password" placeholder="Password" required>
-                {% if request.GET.error %}
-                    <p style="color: red;">Invalid username or password</p>
+                {% if messages %}
+                    <p style="color: red;">{% for message in messages %}{{ message }}{% endfor %}</p>
                 {% endif %}
                 <button type="submit">Sign In</button>
             </form>

@@ -7,11 +7,25 @@ from django.http import JsonResponse
 import json
 from django.contrib.auth import logout
 from .models import Profile
+from django.dispatch import receiver
+from django.db.models.signals import post_save
+
+
+@receiver(post_save, sender=User)
+def create_customer(sender, instance, created, **kwargs):
+    if created:  # Only create the customer if the user was newly created
+        Customer.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_customer(sender, instance, **kwargs):
+    try:
+        instance.customer.save()  # Save the associated customer object
+    except Customer.DoesNotExist:
+        pass  # No action if customer does not exist
 
 # Home view
 def home(request):
-    context = {}
-    return render(request, 'home.html', context)
+    return render(request, 'home.html')
 
 # Login view
 def login(request):
@@ -54,7 +68,7 @@ def register_view(request):
         profile = Profile(user=user, contact_no=contact_no)
         profile.save()
         
-        login(request, user)
+        auth_login(request, user)
         return redirect('home')  # Redirect to the homepage after successful registration
     
     return render(request, 'login.html')

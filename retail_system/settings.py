@@ -140,3 +140,9 @@ LOGIN_REDIRECT_URL = 'home'  # Change to whatever page you want after login
 
 # Redirect URL after logout
 LOGOUT_REDIRECT_URL = 'home'  # Redirect to home after logout
+
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000']
+CSRF_COOKIE_SECURE = True
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_SECURE = True  # if using https

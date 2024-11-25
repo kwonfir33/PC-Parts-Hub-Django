@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from PIL import Image
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -23,15 +24,30 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
-    # "property" used to access like an attribute
+
     @property
     def imageURL(self):
-        # try catch to see if prd has an img, if no return empty string
         try:
             url = self.image.url
         except:
             url = ''
         return url
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)  # Save the product instance first
+
+        if self.image:  # Check if an image is uploaded
+            img = Image.open(self.image.path)  # Open the image using Pillow
+
+            # Resize the image
+            img = img.resize((300, 300), Image.Resampling.LANCZOS)
+
+            # If the image is in "P" mode, convert it to "RGB" (JPEG format compatible)
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+
+            # Save the resized and converted image back to the same path
+            img.save(self.image.path, 'JPEG')  # Ensure saving as JPEG
     
 class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
