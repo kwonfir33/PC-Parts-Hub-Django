@@ -84,8 +84,20 @@ def aboutus(request):
 
 # My orders view
 def myorder(request):
-    context = {}
+    if request.user.is_authenticated:
+        customer = request.user.customer
+        orders = Order.objects.filter(customer=customer, complete=True)  # Get all confirmed orders
+        cartItems = customer.order_set.filter(complete=False).first().get_cart_items if orders else 0
+    else:
+        orders = []
+        cartItems = 0  # If user is not authenticated, cartItems should be 0
+
+    context = {
+        'orders': orders,
+        'cartItems': cartItems,
+    }
     return render(request, 'myorder.html', context)
+
 
 # Feedback view
 def feedback(request):
