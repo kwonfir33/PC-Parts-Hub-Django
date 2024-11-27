@@ -1,21 +1,24 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Customer, Order, OrderItem, Product, ShippingAddress
 from django.http import JsonResponse
-import json
-from django.contrib.auth import logout
-from .models import Profile
-from django.dispatch import receiver
 from django.db.models.signals import post_save
+from django.dispatch import receiver
+import json
 import datetime
+
+from .models import Customer, Order, OrderItem, Product, ShippingAddress
 
 
 @receiver(post_save, sender=User)
 def create_customer(sender, instance, created, **kwargs):
     if created:  # Only create the customer if the user was newly created
-        Customer.objects.create(user=instance)
+        customer = Customer.objects.create(user=instance)
+        # Populate the customer fields with the username and email
+        customer.username = instance.username
+        customer.email = instance.email
+        customer.save()
 
 @receiver(post_save, sender=User)
 def save_customer(sender, instance, **kwargs):
@@ -52,7 +55,7 @@ def register_view(request):
         username = request.POST['username']
         email = request.POST['email']
         password = request.POST['password']
-        contact_no = request.POST['contact_no']
+        
         
         if User.objects.filter(username=username).exists():
             messages.error(request, 'Username already exists.')
@@ -65,10 +68,6 @@ def register_view(request):
         # Create the user
         user = User.objects.create_user(username=username, email=email, password=password)
         
-        # Create the user profile and save additional info
-        profile = Profile(user=user, contact_no=contact_no)
-        profile.save()
-        
         auth_login(request, user)
         return redirect('home')  # Redirect to the homepage after successful registration
     
@@ -76,7 +75,7 @@ def register_view(request):
 
 def logout_user(request):
     logout(request)  # Logs out the current user
-    return redirect('home')  # Redirects to the home page after logging out
+    return redirect('login')  # Redirects to the home page after logging out
 
 # About us view
 def aboutus(request):
@@ -120,7 +119,6 @@ def products(request):
         'search_query': search_query  # Optionally, pass the search query back to the template
     }
     return render(request, 'products.html', context)
-
 
 # Cart view (this page shows the user's cart)
 def cart(request):
@@ -176,7 +174,7 @@ def updateItem(request):
 
     return JsonResponse('Item was added', safe=False)
 
-
+# Process the order (Confirm and save the shipping details)
 def processOrder(request):
     transaction_id = datetime.datetime.now().timestamp()
     data = json.loads(request.body)
@@ -192,18 +190,21 @@ def processOrder(request):
             order.save()
 
         if data['shipping']:  # Check if shipping information exists
-            ShippingAddress.objects.create(
+            shipping_data = data['shipping']
+            shipping_address = ShippingAddress.objects.create(
                 customer=customer,
                 order=order,
-                address=data['shipping']['address'],  # Correct key access
-                city=data['shipping']['city'],
-                state=data['shipping']['state'],
-                zipcode=data['shipping']['zipcode'],
+                address=shipping_data['address'],
+                city=shipping_data['city'],
+                state=shipping_data['state'],
+                zipcode=shipping_data['zipcode'],
             )
-    else:
-        print('User is not logged in')
+            shipping_address.save()
 
-    return JsonResponse('Payment submitted..', safe=False)
+        return JsonResponse({'message': 'Order placed successfully!'}, safe=False)
+
+    else:
+        return JsonResponse({'error': 'User is not logged in'}, safe=False)
 
 def product_list(request):
     search_query = request.GET.get('search', '')  # Get the search query from the URL parameter

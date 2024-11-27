@@ -14,16 +14,11 @@
             <form method="POST" action="{% url 'register' %}">
                 {% csrf_token %}
                 <h1>Create Account</h1>
-                <div class="social-icons">
-                    <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
-                </div>
+                <br>
                 <input type="text" name="username" placeholder="Username" required>
                 <input type="email" name="email" placeholder="Email" required>
                 <input type="password" name="password" placeholder="Password" required>
-                <input type="text" name="contact_no" placeholder="Contact No." required>
+                <!-- <input type="text" name="contact_no" placeholder="Contact No." required> -->
                 <button type="submit">Sign Up</button>
             </form>
         </div>
@@ -31,13 +26,8 @@
             <form method="POST" action="{% url 'login' %}">
                 {% csrf_token %}
                 <h1>Sign In</h1>
-                <div class="social-icons">
-                    <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
-                    <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
-                </div>
-                <span>or use your email & password</span>
+                <span>enter using your username & password</span>
+                <br>
                 <input type="text" name="username" placeholder="Username" required>
                 <input type="password" name="password" placeholder="Password" required>
                 {% if messages %}

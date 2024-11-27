@@ -8,13 +8,17 @@
 				<table class="table">
 					<tr>
 						<th><h5>Items: <strong>{{order.get_cart_items}}</strong></h5></th>
-						<th><h5>Total:<strong> ${{order.get_cart_total|floatformat:2}}</strong></h5></th>
+						<th><h5>Total: <strong>${{order.get_cart_total|floatformat:2}}</strong></h5></th>
 						<th>
-							<a style="float:right; margin:5px;" class="btn btn-success" href="{% url 'checkout' %}">Checkout</a>
+							{% if order.get_cart_items == 0 %}
+								<!-- Show a message instead of checkout button if no items are in the cart -->
+								<p style="color: red;">You cannot go to checkout as there are no items in the cart.</p>
+							{% else %}
+								<a style="float:right; margin:5px;" class="btn btn-success" href="{% url 'checkout' %}">Checkout</a>
+							{% endif %}
 						</th>
 					</tr>
 				</table>
-
 			</div>
 
 			<br>
@@ -26,25 +30,29 @@
 					<div style="flex:1"><strong>Quantity</strong></div>
 					<div style="flex:1"><strong>Total</strong></div>
 				</div>
-				<!-- Render Every Products Added in Cart -->
-				{% for item in items %}
-				<div class="cart-row">
-					<div style="flex:2"><img class="row-image" src="{{item.product.imageURL}}"></div>
-					<div style="flex:2"><p>{{item.product.name}}</p></div> <!--Product Name-->
-					<div style="flex:1"><p>${{item.product.price|floatformat:2}}</p></div> <!--Product Price-->
-					<div style="flex:1"><p class="quantity">{{item.quantity}}</p> <!--Product Quantity-->
-						<!--Buttons for Increment/Decrement on PRD QTY-->
-						<div class="quantity">
-							<img data-product="{{item.product.id}}" data-action="add" class="chg-quantity update-cart" 
-							src="{% static  'images/arrowup_cart.png' %}">
+				<!-- Render Every Product Added in Cart -->
+				{% if items %}
+					{% for item in items %}
+					<div class="cart-row">
+						<div style="flex:2"><img class="row-image" src="{{item.product.imageURL}}"></div>
+						<div style="flex:2"><p>{{item.product.name}}</p></div> <!--Product Name-->
+						<div style="flex:1"><p>${{item.product.price|floatformat:2}}</p></div> <!--Product Price-->
+						<div style="flex:1"><p class="quantity">{{item.quantity}}</p> <!--Product Quantity-->
+							<!--Buttons for Increment/Decrement on Product Quantity-->
+							<div class="quantity">
+								<img data-product="{{item.product.id}}" data-action="add" class="chg-quantity update-cart" 
+								src="{% static 'images/arrowup_cart.png' %}">
 					
-							<img data-product="{{item.product.id}}" data-action="remove" class="chg-quantity update-cart" 
-							src="{% static  'images/arrowdown_cart.png' %}">
+								<img data-product="{{item.product.id}}" data-action="remove" class="chg-quantity update-cart" 
+								src="{% static 'images/arrowdown_cart.png' %}">
+							</div>
 						</div>
+						<div style="flex:1"><p>${{item.get_total|floatformat:2}}</p></div><!--Product Price Total-->
 					</div>
-					<div style="flex:1"><p>${{item.get_total|floatformat:2}}</p></div><!--Product Price Total-->
-				</div>
-				{% endfor %}
+					{% endfor %}
+				{% else %}
+					<p>Your cart is empty. Add some products to proceed.</p>
+				{% endif %}
 			</div>
 		</div>
 	</div>
