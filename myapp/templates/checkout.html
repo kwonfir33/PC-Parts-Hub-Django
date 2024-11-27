@@ -16,7 +16,7 @@
 					
 					<div id="shipping-info">
 						<hr>
-						<p><h3>Shipping Information</h3></p>
+						<p>Shipping Information:</p>
 						<hr>
 						<div class="form-field">
 							<input class="form-control" type="text" name="address" placeholder="Address..">
@@ -40,27 +40,111 @@
 			<br>
 			<div class="box-element hidden" id="payment-info">
 				<small>Paypal Options</small>
+				<button id="make-payment">Make payment</button>
 			</div>
 			
 		</div>
 
 		<div class="col-lg-6">
 			<div class="box-element">
+				<a class="btn btn-outline-dark" href="{% url 'cart' %}">&#x2190; Back to Cart</a>
 				<hr>
 				<h3>Order Summary</h3>
 				<hr>
-				<!-- Render Every Items in Cart-->
 				{% for item in items %}
 				<div class="cart-row">
-					<div style="flex:2"><img class="row-image" src="{{item.product.image.url}}"></div><!--Item Image-->
-					<div style="flex:2"><p>{{item.product.name}}</p></div><!--Item Name-->
-					<div style="flex:1"><p>₱{{item.product.price|floatformat:2}}</p></div><!--Item Price-->
-					<div style="flex:1"><p>x{{item.quantity}}</p></div><!--Item Quantity-->
+					<div style="flex:2"><img class="row-image" src="{{item.product.imageURL}}"></div>
+					<div style="flex:2"><p>{{item.product.name}}</p></div>
+					<div style="flex:1"><p>${{item.product.price|floatformat:2}}</p></div>
+					<div style="flex:1"><p>x{{item.quantity}}</p></div>
 				</div>
 				{% endfor %}
-				<h5>Items:   {{order.get_cart_items}}</h5><!--Order Qty Total-->
-				<h5>Total:   ₱{{order.get_cart_total|floatformat:2}}</h5><!--Order Price Total-->
+				<h5>Items:   {{order.get_cart_items}}</h5>
+				<h5>Total:   ${{order.get_cart_total|floatformat:2}}</h5>
 			</div>
 		</div>
 	</div>
+
+	<script type="text/javascript">
+		var shipping = '{{order.shipping}}'
+var total = '{{order.get_cart_total|floatformat:2}}'
+var user = '{{user}}' // Ensure user is properly passed as a string to the template
+
+if (shipping == 'False'){
+    document.getElementById('shipping-info').innerHTML = '' // Hide shipping info if not required
+}
+
+if (user == 'AnonymousUser'){
+    document.getElementById('user-info').classList.remove("hidden"); // Show user info for anonymous users
+} else {
+    document.getElementById('user-info').innerHTML = ''; // Hide for logged-in users
+}
+
+if (shipping == 'False' && user != 'AnonymousUser'){
+    document.getElementById('form-wrapper').classList.add("hidden"); // Hide entire form if user is logged in and shipping is false
+    document.getElementById('payment-info').classList.remove("hidden"); // Show payment if shipping is not required
+}
+
+var form = document.getElementById('form')
+form.addEventListener('submit', function(e){
+    e.preventDefault()
+    console.log('Form Submitted...')
+    document.getElementById('form-button').classList.add("hidden");
+    document.getElementById('payment-info').classList.remove("hidden");
+})
+
+document.getElementById('make-payment').addEventListener('click', function(e){
+    submitFormData()
+})
+
+function submitFormData(){
+    console.log('Payment button clicked')
+
+    var userFormData = {
+        'name': null,
+        'email': null,
+        'total': total,
+    }
+
+    var shippingInfo = {
+        'address': null,
+        'city': null,
+        'state': null,
+        'zipcode': null,
+    }
+
+    if (shipping != 'False'){
+        shippingInfo.address = form.address.value
+        shippingInfo.city = form.city.value
+        shippingInfo.state = form.state.value
+        shippingInfo.zipcode = form.zipcode.value
+    }
+
+    if (user == 'AnonymousUser'){
+        userFormData.name = form.name.value
+        userFormData.email = form.email.value
+    }
+
+    console.log('Shipping Info:', shippingInfo)
+    console.log('User Info:', userFormData)
+
+    var url = "/process_order/"
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+        }, 
+        body: JSON.stringify({'form': userFormData, 'shipping': shippingInfo}),
+    })
+    .then((response) => response.json())
+    .then((data) => {
+        console.log('Success:', data);
+        alert('Transaction completed');
+        window.location.href = "{% url 'products' %}"
+    })
+}
+
+						
+	</script>
 {% endblock content %}

@@ -15,7 +15,7 @@ class Customer(models.Model):
     email = models.CharField(max_length=200, null= True)
 
     def __str__(self):
-        return self.name
+        return self.name if self.name else "Unnamed Customer"
     
 class Product(models.Model):
     name = models.CharField(max_length=200)
@@ -57,6 +57,12 @@ class Order(models.Model):
 
     def __str__(self):
         return str(self.id)
+    
+    @property
+    def shipping(self):
+        shipping = False
+        orderitems = self.orderitem_set.all()
+        return shipping
     
     #Calculate Total Price for Items
     @property

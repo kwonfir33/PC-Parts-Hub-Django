@@ -7,25 +7,33 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}">
     <script type="text/javascript">
-        var user = '{{request.user}}'
+        var user = '{{ request.user }}';
 
-        function getToken(name) {
-            var cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
+        function getCookie(name) {
+            var cookieArr = document.cookie.split(";");
+            for (var i = 0; i < cookieArr.length; i++) {
+                var cookiePair = cookieArr[i].split("=");
+                if (name == cookiePair[0].trim()) {
+                    return decodeURIComponent(cookiePair[1]);
                 }
             }
-            return cookieValue;
+            return null;
         }
-        var csrftoken = getToken('csrftoken')
+
+        function getToken(name) {
+            return getCookie(name);
+        }
+
+        var csrftoken = getToken('csrftoken');
+        var cart = JSON.parse(getCookie('cart')) || {};
+
+        if (Object.keys(cart).length === 0) {
+            console.log('Cart Created!', cart);
+            document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/";
+        }
+
+        console.log('Cart:', cart);
     </script>
-    
 </head>
 <body>
 
@@ -47,7 +55,7 @@
         
         <div class="form-inline my-2 my-lg-0">
           {% if request.user.is_authenticated %}
-              <span class="navbar-text mr-3">Welcome, {{ request.user.username }}  </span>
+              <span class="navbar-text mr-3">Welcome, {{ request.user.username }}</span>
               <a href="{% url 'logout' %}" class="btn btn-warning">Logout</a>
           {% else %}
               <a href="{% url 'login' %}" class="btn btn-warning">Login</a>

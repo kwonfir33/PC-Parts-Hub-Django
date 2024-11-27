@@ -2,13 +2,14 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Customer, Order, OrderItem, Product
+from .models import Customer, Order, OrderItem, Product, ShippingAddress
 from django.http import JsonResponse
 import json
 from django.contrib.auth import logout
 from .models import Profile
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+import datetime
 
 
 @receiver(post_save, sender=User)
@@ -104,9 +105,22 @@ def products(request):
         order = {'get_cart_total': 0, 'get_cart_items': 0}
         cartItems = order['get_cart_items']
 
-    products = Product.objects.all()
-    context = {'products': products, 'cartItems': cartItems}
+    # Get the search query from the GET parameters (if any)
+    search_query = request.GET.get('search', '')
+    if search_query:
+        # Filter products based on the search query (case-insensitive partial match)
+        products = Product.objects.filter(name__icontains=search_query)
+    else:
+        # If no search query, show all products
+        products = Product.objects.all()
+
+    context = {
+        'products': products,
+        'cartItems': cartItems,
+        'search_query': search_query  # Optionally, pass the search query back to the template
+    }
     return render(request, 'products.html', context)
+
 
 # Cart view (this page shows the user's cart)
 def cart(request):
@@ -132,7 +146,7 @@ def checkout(request):
         cartItems = order.get_cart_items
     else:
         items = []
-        order = {'get_cart_total': 0, 'get_cart_items': 0}
+        order = {'get_cart_total': 0, 'get_cart_items': 0, 'shipping': False}
         cartItems = order['get_cart_items']
 
     context = {'items': items, 'order': order, 'cartItems': cartItems}
@@ -162,3 +176,40 @@ def updateItem(request):
 
     return JsonResponse('Item was added', safe=False)
 
+
+def processOrder(request):
+    transaction_id = datetime.datetime.now().timestamp()
+    data = json.loads(request.body)
+
+    if request.user.is_authenticated:
+        customer = request.user.customer
+        order, created = Order.objects.get_or_create(customer=customer, complete=False)
+        total = float(data['form']['total'])
+        order.transaction_id = transaction_id
+
+        if total == order.get_cart_total:
+            order.complete = True
+            order.save()
+
+        if data['shipping']:  # Check if shipping information exists
+            ShippingAddress.objects.create(
+                customer=customer,
+                order=order,
+                address=data['shipping']['address'],  # Correct key access
+                city=data['shipping']['city'],
+                state=data['shipping']['state'],
+                zipcode=data['shipping']['zipcode'],
+            )
+    else:
+        print('User is not logged in')
+
+    return JsonResponse('Payment submitted..', safe=False)
+
+def product_list(request):
+    search_query = request.GET.get('search', '')  # Get the search query from the URL parameter
+    if search_query:
+        products = Product.objects.filter(name__icontains=search_query)  # Filter products based on the search term
+    else:
+        products = Product.objects.all()  # Show all products if no search query is provided
+
+    return render(request, 'product_list.html', {'products': products})
