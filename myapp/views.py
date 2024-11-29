@@ -17,6 +17,7 @@ def create_customer(sender, instance, created, **kwargs):
         customer = Customer.objects.create(user=instance)
         # Populate the customer fields with the username and email
         customer.username = instance.username
+        customer.name = instance.username
         customer.email = instance.email
         customer.save()
 
